@@ -16,12 +16,17 @@ class AuthService {
       : _tokenExpiration = tokenExpiration ?? const Duration(hours: 24);
 
   /// Authenticates a user with email and password
-  Future<Map<String, dynamic>?> authenticate(String email, String password) async {
+  Future<Map<String, dynamic>?> authenticate(
+      String email, String password) async {
     try {
+      // print
+      print('Authenticating user with email: $email');
       final results = await _db.query(
         'SELECT id, username, email, "passwordHash", role FROM users_sections WHERE email = @email',
         substitutionValues: {'email': email},
       );
+      // print results
+      print('Query results: $results');
 
       if (results.isEmpty) {
         return null; // User not found
@@ -36,7 +41,8 @@ class AuthService {
       };
 
       // Verify password
-      final bool isValid = BCrypt.checkpw(password, user['passwordHash'] as String);
+      final bool isValid =
+          BCrypt.checkpw(password, user['passwordHash'] as String);
       if (!isValid) {
         return null; // Invalid password
       }
@@ -86,7 +92,7 @@ class AuthService {
     } on JWTExpiredException {
       print('JWT expired');
       return null;
-    } 
+    }
   }
 
   /// Creates a new user
