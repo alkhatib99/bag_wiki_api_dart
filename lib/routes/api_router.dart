@@ -1,9 +1,8 @@
+import 'package:bag_wiki_api_dart/middleware/cors_middleware.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'package:dotenv/dotenv.dart';
-import 'middleware/cors_middleware.dart';
-import 'controllers/section_controller.dart';
-
+  
 /// API router configuration
 class ApiRouter {
   final Router _router = Router();
@@ -17,6 +16,7 @@ class ApiRouter {
     final allowedOrigins = [
       'https://bag-wiki.vercel.app',
       'https://bag-wiki-admin.vercel.app',
+    
     ];
     
     // Add localhost for development

@@ -10,19 +10,19 @@ class DatabaseConfig {
   late final String username;
   late final String password;
   late final bool useSSL;
-  
+
   /// Singleton instance
   static final DatabaseConfig _instance = DatabaseConfig._internal();
-  
+
   /// Factory constructor to return the singleton instance
   factory DatabaseConfig() {
     return _instance;
   }
-  
+
   /// Private constructor for singleton pattern
   DatabaseConfig._internal() {
     final env = DotEnv(includePlatformEnvironment: true)..load();
-    
+
     host = env['DB_HOST'] ?? 'localhost';
     port = int.parse(env['DB_PORT'] ?? '5432');
     database = env['DB_NAME'] ?? 'postgres';
@@ -30,18 +30,15 @@ class DatabaseConfig {
     password = env['DB_PASSWORD'] ?? 'postgres';
     useSSL = env['DB_SSL']?.toLowerCase() == 'true';
   }
-  
+
   /// Create a PostgreSQL connection
   Future<PostgreSQLConnection> createConnection() async {
-    final connection = PostgreSQLConnection(
-      host,
-      port,
-      database,
-      username: username,
-      password: password,
-      useSSL: useSSL,
-    );
-    
+    final connection = PostgreSQLConnection(host, port, database,
+        username: username,
+        password: password,
+        useSSL: useSSL,
+        allowClearTextPassword: true);
+
     try {
       await connection.open();
       print('Database connection established successfully');
@@ -51,11 +48,11 @@ class DatabaseConfig {
       rethrow;
     }
   }
-  
+
   /// Test the database connection
   Future<bool> testConnection() async {
     PostgreSQLConnection? connection;
-    
+
     try {
       connection = await createConnection();
       await connection.query('SELECT 1');
@@ -67,7 +64,7 @@ class DatabaseConfig {
       await connection?.close();
     }
   }
-  
+
   /// Initialize the database schema
   Future<void> initializeDatabase(PostgreSQLConnection connection) async {
     try {
@@ -82,7 +79,7 @@ class DatabaseConfig {
           "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         )
       ''');
-      
+
       print('Database schema initialized successfully');
     } catch (e) {
       print('Failed to initialize database schema: $e');
