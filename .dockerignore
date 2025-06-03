@@ -1,0 +1,4 @@
+# .dockerignore
+.dart_tool/
+.git/
+build/
