@@ -4,6 +4,7 @@ WORKDIR /app
 
 # Copy pubspec files
 COPY pubspec.* ./
+
 # Get dependencies
 RUN dart pub get
 
@@ -30,7 +31,7 @@ COPY --from=build /app/bin/server /app/bin/server
 COPY --from=build /app/.env.example /app/.env.example
 
 # Expose the port the server listens on
-EXPOSE 5432
+EXPOSE 8080
 
 # Start the server
 CMD ["/app/bin/server"]

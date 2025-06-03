@@ -8,22 +8,15 @@ services:
     branch: main
     numInstances: 1
     healthCheckPath: /
+    dockerfilePath: ./Dockerfile
     envVars:
-      - key: DB_HOST
-        sync: false
-      - key: DB_PORT
-        sync: false
-      - key: DB_NAME
-        sync: false
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: DB_SSL
-        value: true
+      - key: DATABASE_URL
+        value: postgres://u293297_Be11RGKyDP:9qijZb1BEIDppU7ivJuNxLoa@gamesfra3.bisecthosting.com:5432/s293297_test
+      - key: TELEGRAM_BOT_TOKEN
+        value: 7659362217:AAEWZDwALfX4bCXXI3cXRUR67w5iGF-wQTQ
       - key: PORT
         value: 8080
       - key: ENVIRONMENT
         value: production
       - key: ALLOWED_ORIGINS
-        value: https://bag-wiki.vercel.app,https://bag-wiki-admin.vercel.app
+        value: https://bagwiki.vercel.app,https://bag-wiki-admin.vercel.app
