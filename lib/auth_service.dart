@@ -19,7 +19,7 @@ class AuthService {
   Future<Map<String, dynamic>?> authenticate(String email, String password) async {
     try {
       final results = await _db.query(
-        'SELECT id, username, email, "passwordHash", role FROM users WHERE email = @email',
+        'SELECT id, username, email, "passwordHash", role FROM users_sections WHERE email = @email',
         substitutionValues: {'email': email},
       );
 
@@ -102,7 +102,7 @@ class AuthService {
 
       final results = await _db.query(
         '''
-        INSERT INTO users (username, email, "passwordHash", role)
+        INSERT INTO users_sections (username, email, "passwordHash", role)
         VALUES (@username, @email, @passwordHash, @role)
         RETURNING id, username, email, role, "createdAt"
         ''',
