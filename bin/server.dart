@@ -67,12 +67,11 @@
 //     .addMiddleware(logRequests())
 //     .addMiddleware(corsMiddleware())
 //     .addHandler(router);
- 
+
 //   // Start server
 //   final server = await serve(handler, InternetAddress.anyIPv4, port);
 //   print('Server listening on port ${server.port}');
 // }
-
 
 import 'dart:io';
 import 'package:bag_wiki_api_dart/config/database_config.dart';
@@ -129,11 +128,15 @@ void main(List<String> args) async {
   final router = await _configureRouter(dbConfig);
   final handler = Pipeline()
       .addMiddleware(logRequests())
-      .addMiddleware(corsMiddleware())
+      .addMiddleware(corsMiddleware(
+        allowedOrigins: [
+          'https://bag-wiki.vercel.app',
+          'https://bag-wiki-admin.vercel.app',
+        ],
+      ))
       .addHandler(router);
 
   // 🚀 Start server
   final server = await serve(handler, InternetAddress.anyIPv4, port);
   print('✅ Server listening on port ${server.port}');
 }
-
