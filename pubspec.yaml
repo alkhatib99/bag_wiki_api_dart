@@ -1,0 +1,21 @@
+name: bag_wiki_api_dart
+description: Backend API for BAG Wiki and BAG Wiki Admin using Dart and Shelf
+version: 1.0.0
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  args: ^2.4.2
+  dotenv: ^4.2.0
+  postgres: ^2.6.3
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
+  shelf_cors_headers: ^0.1.5
+  logging: ^1.2.0
+  json_annotation: ^4.8.1
+
+dev_dependencies:
+  lints: ^3.0.0
+  test: ^1.24.6
+  build_runner: ^2.4.6
+  json_serializable: ^6.7.1
