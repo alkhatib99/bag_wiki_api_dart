@@ -1,244 +1,264 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'package:postgres/postgres.dart';
 import '../models/section_model.dart';
+import 'package:postgres/postgres.dart';
 
-/// Controller for handling section-related API endpoints
 class SectionController {
   final PostgreSQLConnection _db;
-  
-  /// Constructor
-  SectionController(this._db);
-  
-  /// Create a router with all section endpoints
-  Router get router {
-    final router = Router();
-    
-    // GET /api/sections - Get all sections
-    router.get('/', _getAllSections);
-    
-    // GET /api/sections/:id - Get a specific section
-    router.get('/<id>', _getSectionById);
-    
-    // POST /api/sections - Create a new section
-    router.post('/', _createSection);
-    
-    // PUT /api/sections/:id - Update a section
-    router.put('/<id>', _updateSection);
-    
-    // DELETE /api/sections/:id - Delete a section
-    router.delete('/<id>', _deleteSection);
-    
-    return router;
+  Router get router => _router;
+  final _router = Router();
+
+  SectionController(this._db) {
+    _router.get('/', _getAllSections);
+    _router.get('/<id>', _getSectionById);
+    _router.post('/', _createSection);
+    _router.put('/<id>', _updateSection);
+    _router.delete('/<id>', _deleteSection);
   }
-  
-  /// Get all sections
+
   Future<Response> _getAllSections(Request request) async {
     try {
       final results = await _db.query('SELECT * FROM sections ORDER BY id');
+      
       final sections = results.map((row) {
-        return Section.fromDatabase(row.toColumnMap()).toJson();
+        return Section(
+          id: row[0] as int,
+          title: row[1] as String,
+          content: row[2] as String,
+          imageUrl: row[3] as String,
+          createdAt: row[4] != null ? DateTime.parse(row[4].toString()) : null,
+          updatedAt: row[5] != null ? DateTime.parse(row[5].toString()) : null,
+        ).toJson();
       }).toList();
       
       return Response.ok(
-        jsonEncode(sections),
+        json.encode(sections),
         headers: {'Content-Type': 'application/json'},
       );
     } catch (e) {
-      print('Error getting all sections: $e');
+      print('Error fetching sections: $e');
       return Response.internalServerError(
-        body: jsonEncode({'error': 'Failed to fetch sections'}),
+        body: json.encode({'error': 'Failed to fetch sections: $e'}),
         headers: {'Content-Type': 'application/json'},
       );
     }
   }
-  
-  /// Get a section by ID
+
   Future<Response> _getSectionById(Request request, String id) async {
     try {
       final sectionId = int.tryParse(id);
       if (sectionId == null) {
         return Response.badRequest(
-          body: jsonEncode({'error': 'Invalid section ID'}),
+          body: json.encode({'error': 'Invalid section ID'}),
           headers: {'Content-Type': 'application/json'},
         );
       }
-      
+
       final results = await _db.query(
         'SELECT * FROM sections WHERE id = @id',
         substitutionValues: {'id': sectionId},
       );
-      
+
       if (results.isEmpty) {
         return Response.notFound(
-          jsonEncode({'error': 'Section not found'}),
+          json.encode({'error': 'Section not found'}),
           headers: {'Content-Type': 'application/json'},
         );
       }
-      
-      final section = Section.fromDatabase(results.first.toColumnMap()).toJson();
-      
+
+      final row = results.first;
+      final section = Section(
+        id: row[0] as int,
+        title: row[1] as String,
+        content: row[2] as String,
+        imageUrl: row[3] as String,
+        createdAt: row[4] != null ? DateTime.parse(row[4].toString()) : null,
+        updatedAt: row[5] != null ? DateTime.parse(row[5].toString()) : null,
+      ).toJson();
+
       return Response.ok(
-        jsonEncode(section),
+        json.encode(section),
         headers: {'Content-Type': 'application/json'},
       );
     } catch (e) {
-      print('Error getting section by ID: $e');
       return Response.internalServerError(
-        body: jsonEncode({'error': 'Failed to fetch section'}),
+        body: json.encode({'error': 'Failed to fetch section: $e'}),
         headers: {'Content-Type': 'application/json'},
       );
     }
   }
-  
-  /// Create a new section
+
   Future<Response> _createSection(Request request) async {
     try {
       final jsonBody = await request.readAsString();
-      final Map<String, dynamic> body = jsonDecode(jsonBody);
+      final Map<String, dynamic> data = json.decode(jsonBody);
       
-      // Validate required fields
-      if (body['title'] == null || body['content'] == null || body['imageUrl'] == null) {
+      if (!data.containsKey('title') || !data.containsKey('content') || !data.containsKey('imageUrl')) {
         return Response.badRequest(
-          body: jsonEncode({'error': 'Title, content, and imageUrl are required'}),
+          body: json.encode({'error': 'Missing required fields: title, content, or imageUrl'}),
           headers: {'Content-Type': 'application/json'},
         );
       }
-      
-      final section = Section(
-        title: body['title'],
-        content: body['content'],
-        imageUrl: body['imageUrl'],
-      );
-      
-      final result = await _db.query(
+
+      final title = data['title'] as String;
+      final content = data['content'] as String;
+      final imageUrl = data['imageUrl'] as String;
+
+      final results = await _db.query(
         '''
         INSERT INTO sections (title, content, "imageUrl")
         VALUES (@title, @content, @imageUrl)
         RETURNING *
         ''',
-        substitutionValues: section.toDatabase(),
+        substitutionValues: {
+          'title': title,
+          'content': content,
+          'imageUrl': imageUrl,
+        },
       );
-      
-      final createdSection = Section.fromDatabase(result.first.toColumnMap()).toJson();
-      
+
+      final row = results.first;
+      final section = Section(
+        id: row[0] as int,
+        title: row[1] as String,
+        content: row[2] as String,
+        imageUrl: row[3] as String,
+        createdAt: row[4] != null ? DateTime.parse(row[4].toString()) : null,
+        updatedAt: row[5] != null ? DateTime.parse(row[5].toString()) : null,
+      ).toJson();
+
       return Response(
         201,
-        body: jsonEncode(createdSection),
+        body: json.encode(section),
         headers: {'Content-Type': 'application/json'},
       );
     } catch (e) {
-      print('Error creating section: $e');
       return Response.internalServerError(
-        body: jsonEncode({'error': 'Failed to create section'}),
+        body: json.encode({'error': 'Failed to create section: $e'}),
         headers: {'Content-Type': 'application/json'},
       );
     }
   }
-  
-  /// Update a section
+
   Future<Response> _updateSection(Request request, String id) async {
     try {
       final sectionId = int.tryParse(id);
       if (sectionId == null) {
         return Response.badRequest(
-          body: jsonEncode({'error': 'Invalid section ID'}),
+          body: json.encode({'error': 'Invalid section ID'}),
           headers: {'Content-Type': 'application/json'},
         );
       }
-      
+
+      final jsonBody = await request.readAsString();
+      final Map<String, dynamic> data = json.decode(jsonBody);
+
       // Check if section exists
-      final checkResult = await _db.query(
+      final checkResults = await _db.query(
         'SELECT id FROM sections WHERE id = @id',
         substitutionValues: {'id': sectionId},
       );
-      
-      if (checkResult.isEmpty) {
+
+      if (checkResults.isEmpty) {
         return Response.notFound(
-          jsonEncode({'error': 'Section not found'}),
+          json.encode({'error': 'Section not found'}),
           headers: {'Content-Type': 'application/json'},
         );
       }
-      
-      final jsonBody = await request.readAsString();
-      final Map<String, dynamic> body = jsonDecode(jsonBody);
-      
-      // Validate required fields
-      if (body['title'] == null || body['content'] == null || body['imageUrl'] == null) {
+
+      // Build update query dynamically based on provided fields
+      final updates = <String>[];
+      final values = <String, dynamic>{'id': sectionId};
+
+      if (data.containsKey('title')) {
+        updates.add('title = @title');
+        values['title'] = data['title'];
+      }
+
+      if (data.containsKey('content')) {
+        updates.add('content = @content');
+        values['content'] = data['content'];
+      }
+
+      if (data.containsKey('imageUrl')) {
+        updates.add('"imageUrl" = @imageUrl');
+        values['imageUrl'] = data['imageUrl'];
+      }
+
+      // Add updatedAt timestamp
+      updates.add('"updatedAt" = CURRENT_TIMESTAMP');
+
+      if (updates.isEmpty) {
         return Response.badRequest(
-          body: jsonEncode({'error': 'Title, content, and imageUrl are required'}),
+          body: json.encode({'error': 'No fields to update'}),
           headers: {'Content-Type': 'application/json'},
         );
       }
-      
+
+      final updateQuery = '''
+      UPDATE sections
+      SET ${updates.join(', ')}
+      WHERE id = @id
+      RETURNING *
+      ''';
+
+      final results = await _db.query(updateQuery, substitutionValues: values);
+      final row = results.first;
       final section = Section(
-        id: sectionId,
-        title: body['title'],
-        content: body['content'],
-        imageUrl: body['imageUrl'],
-      );
-      
-      final result = await _db.query(
-        '''
-        UPDATE sections
-        SET title = @title, content = @content, "imageUrl" = @imageUrl, "updatedAt" = CURRENT_TIMESTAMP
-        WHERE id = @id
-        RETURNING *
-        ''',
-        substitutionValues: section.toDatabase(),
-      );
-      
-      final updatedSection = Section.fromDatabase(result.first.toColumnMap()).toJson();
-      
+        id: row[0] as int,
+        title: row[1] as String,
+        content: row[2] as String,
+        imageUrl: row[3] as String,
+        createdAt: row[4] != null ? DateTime.parse(row[4].toString()) : null,
+        updatedAt: row[5] != null ? DateTime.parse(row[5].toString()) : null,
+      ).toJson();
+
       return Response.ok(
-        jsonEncode(updatedSection),
+        json.encode(section),
         headers: {'Content-Type': 'application/json'},
       );
     } catch (e) {
-      print('Error updating section: $e');
       return Response.internalServerError(
-        body: jsonEncode({'error': 'Failed to update section'}),
+        body: json.encode({'error': 'Failed to update section: $e'}),
         headers: {'Content-Type': 'application/json'},
       );
     }
   }
-  
-  /// Delete a section
+
   Future<Response> _deleteSection(Request request, String id) async {
     try {
       final sectionId = int.tryParse(id);
       if (sectionId == null) {
         return Response.badRequest(
-          body: jsonEncode({'error': 'Invalid section ID'}),
+          body: json.encode({'error': 'Invalid section ID'}),
           headers: {'Content-Type': 'application/json'},
         );
       }
-      
+
       // Check if section exists
-      final checkResult = await _db.query(
+      final checkResults = await _db.query(
         'SELECT id FROM sections WHERE id = @id',
         substitutionValues: {'id': sectionId},
       );
-      
-      if (checkResult.isEmpty) {
+
+      if (checkResults.isEmpty) {
         return Response.notFound(
-          jsonEncode({'error': 'Section not found'}),
+          json.encode({'error': 'Section not found'}),
           headers: {'Content-Type': 'application/json'},
         );
       }
-      
-      await _db.query(
+
+      // Delete the section
+      await _db.execute(
         'DELETE FROM sections WHERE id = @id',
         substitutionValues: {'id': sectionId},
       );
-      
+
       return Response(204);
     } catch (e) {
-      print('Error deleting section: $e');
       return Response.internalServerError(
-        body: jsonEncode({'error': 'Failed to delete section'}),
+        body: json.encode({'error': 'Failed to delete section: $e'}),
         headers: {'Content-Type': 'application/json'},
       );
     }
