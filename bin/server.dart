@@ -42,7 +42,7 @@ void main(List<String> args) async {
     );
 
   final result = parser.parse(args);
-final port = int.tryParse(result['port'] ?? '8080') ?? 8080;
+final port = int.tryParse(result['port'] ?? '5432') ?? 5432;
 
   // Load environment variables
   final env = DotEnv(includePlatformEnvironment: true)..load();

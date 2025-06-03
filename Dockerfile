@@ -30,7 +30,7 @@ COPY --from=build /app/bin/server /app/bin/server
 COPY --from=build /app/.env.example /app/.env.example
 
 # Expose the port the server listens on
-EXPOSE 8080
+EXPOSE 5432
 
 # Start the server
 CMD ["/app/bin/server"]
