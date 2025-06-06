@@ -29,7 +29,7 @@ class AuthController {
       final email = data['email'] as String;
       final password = data['password'] as String;
 
-      final result = await _authService.authenticate(email, password);
+      var result = await _authService.authenticate(email, password);
 
       if (result == null) {
         return Response.unauthorized(
