@@ -12,19 +12,19 @@ class Section {
   @JsonKey(name: 'imageUrl')
   final String imageUrl;
   
-  @JsonKey(name: 'createdAt')
-  final DateTime? createdAt;
+  // @JsonKey(name: 'createdAt')
+  // final DateTime? createdAt;
   
-  @JsonKey(name: 'updatedAt')
-  final DateTime? updatedAt;
+  // @JsonKey(name: 'updatedAt')
+  // final DateTime? updatedAt;
   
   Section({
     this.id,
     required this.title,
     required this.content,
     required this.imageUrl,
-    this.createdAt,
-    this.updatedAt,
+    // this.createdAt,
+    // this.updatedAt,
   });
   
   factory Section.fromJson(Map<String, dynamic> json) => _$SectionFromJson(json);
