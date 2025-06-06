@@ -22,7 +22,7 @@ class AuthService {
       // print
       print('Authenticating user with email: $email');
       final results = await _db.query(
-        'SELECT id, username, email, "passwordHash", role FROM users_sections WHERE email = @email',
+        'SELECT id,email, password, role FROM users_sections WHERE email = @email',
         substitutionValues: {'email': email},
       );
       // print results
@@ -36,14 +36,15 @@ class AuthService {
         'id': results[0][0],
         'username': results[0][1],
         'email': results[0][2],
-        'passwordHash': results[0][3],
+        'password': results[0][3],
         'role': results[0][4],
       };
-final passwordHash = results[0][3] as String;
+
+      final passwordHash = results[0][3] as String;
 
       // Verify password
-      final bool isValid =
-          BCrypt.checkpw(password, passwordHash);
+      final bool isValid = password == passwordHash;
+      // BCrypt.checkpw(password, passwordHash);
       if (!isValid) {
         return null; // Invalid password
       }
