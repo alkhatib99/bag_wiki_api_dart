@@ -39,10 +39,11 @@ class AuthService {
         'passwordHash': results[0][3],
         'role': results[0][4],
       };
+final passwordHash = results[0][3] as String;
 
       // Verify password
       final bool isValid =
-          BCrypt.checkpw(password, user['passwordHash'] as String);
+          BCrypt.checkpw(password, passwordHash);
       if (!isValid) {
         return null; // Invalid password
       }

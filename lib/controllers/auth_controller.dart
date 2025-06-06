@@ -11,6 +11,7 @@ class AuthController {
   AuthController(this._authService) {
     _router.post('/login', _login);
     _router.post('/register', _register);
+    // _router.post('/logout', _logout);
   }
 
   Future<Response> _login(Request request) async {
