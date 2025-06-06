@@ -33,7 +33,7 @@ class AuthController {
 
       if (result == null) {
         return Response.unauthorized(
-          json.encode({'error': 'Invalid email or password'}),
+          json.encode({'error': 'Invalid email or password -\n for login email : $email\n password: $password'}), 
           headers: {'Content-Type': 'application/json'},
         );
       }
