@@ -19,4 +19,4 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: ALLOWED_ORIGINS
-        value: https://bagwiki.vercel.app,https://bag-wiki-admin.vercel.app
+        value: https://bagwiki.vercel.app, https://bag-wiki-admin.vercel.app/, https://bag-wiki-admin.vercel.app
