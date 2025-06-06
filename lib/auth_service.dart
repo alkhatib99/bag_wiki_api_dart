@@ -34,13 +34,13 @@ class AuthService {
 
       final user = {
         'id': results[0][0],
-        'username': results[0][1],
-        'email': results[0][2],
-        'password': results[0][3],
-        'role': results[0][4],
+        // 'username': results[0][1],
+        'email': results[0][1],
+        'password': results[0][2],
+        'role': results[0][3],
       };
 
-      final passwordHash = results[0][3] as String;
+      final passwordHash = results[0][2] as String;
 
       // Verify password
       final bool isValid = password == passwordHash;
@@ -55,7 +55,7 @@ class AuthService {
       return {
         'user': {
           'id': user['id'],
-          'username': user['username'],
+          // 'username': user['username'],
           'email': user['email'],
           'role': user['role'],
         },
@@ -72,7 +72,7 @@ class AuthService {
     final jwt = JWT(
       {
         'id': user['id'],
-        'username': user['username'],
+        // 'username': user['username'],ss
         'email': user['email'],
         'role': user['role'],
         'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
