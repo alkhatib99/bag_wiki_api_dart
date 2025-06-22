@@ -111,7 +111,7 @@ void main(List<String> args) async {
 
   // Start server
   final server = await serve(handler, InternetAddress.anyIPv4, port);
-  
+
   // Print server information
   print('Server started on http://${server.address.host}:${server.port}');
   // Print server port for debugging
@@ -128,22 +128,20 @@ void main(List<String> args) async {
   // print('Environment variables:');
   env.load();
   final fields = env['FIELDS']?.split(',') ?? [];
-  
+
   // Print each field
   print('Fields:');
   if (fields.isEmpty) {
     print('No fields specified in environment variables.');
-  }
-   else {
+  } else {
     print('Fields from environment variables:');
   }
-  
-  
+
   // Print registered routes for debugging
-  print('Registered routes:');
-  router.all('/<ignored|.*>', (Request request) {
-    return Response.notFound('Not Found');
-  });
+  // print('Registered routes:');
+  // router.all('/<ignored|.*>', (Request request) {
+  //   return Response.notFound('Not Found');
+  // });
 
   print('Root route registered at /');
   print('Auth routes registered at /auth/login');
@@ -152,9 +150,9 @@ void main(List<String> args) async {
   print('Section routes registered at /api/sections/<id>');
   print('Section routes registered at /api/sections/<id>/create');
   print('Section routes registered at /api/sections/<id>/update');
-  
+
   // print('Auth routes registered at /auth');
-  // print(router)  
+  // print(router)
   // print routes are registered under server
   // print("")
   print('Section routes registered under /api/sections');
