@@ -30,14 +30,19 @@ Future<Router> configureRouter(
 
   // Authenticated section routes (authentication required)
   final authenticatedSectionRouter = Router();
-  authenticatedSectionRouter.post('/create', sectionController.createSectionHandler);
-  authenticatedSectionRouter.put('/<id>/update', sectionController.updateSectionHandler);
-  authenticatedSectionRouter.delete('/<id>', sectionController.deleteSectionHandler);
+  authenticatedSectionRouter.post(
+      '/create', sectionController.createSectionHandler);
+  authenticatedSectionRouter.put(
+      '/<id>/update', sectionController.updateSectionHandler);
+  authenticatedSectionRouter.delete(
+      '/<id>', sectionController.deleteSectionHandler);
 
   // Apply authentication middleware to the authenticated section routes
   router.mount(
     '/api/sections',
-    Pipeline().addMiddleware(authMiddleware(authService)).addHandler(authenticatedSectionRouter),
+    Pipeline()
+        .addMiddleware(authMiddleware(authService))
+        .addHandler(authenticatedSectionRouter),
   );
 
   // Root route
@@ -140,12 +145,11 @@ void main(List<String> args) async {
 
   // Add a shutdown hook to close the database connection gracefully
   ProcessSignal.sigint.watch().listen((signal) async {
-    print('\nReceived SIGINT. Shutting down server and closing database connection...');
+    print(
+        '\nReceived SIGINT. Shutting down server and closing database connection...');
     await server.close(force: true);
     await connection.close();
     print('Server stopped and database connection closed.');
     exit(0);
   });
 }
-
-
