@@ -1,0 +1,67 @@
+# تجاهل ملفات النظام والمجلدات
+.DS_Store
+Thumbs.db
+
+# تجاهل ملفات التبعيات والمجلدات
+node_modules/
+bower_components/
+jspm_packages/
+web_modules/
+
+# تجاهل ملفات البناء والمخرجات
+build/
+dist/
+*.log
+*.tmp
+*.swp
+
+# تجاهل ملفات التكوين الحساسة
+.env
+.env.local
+.env.*.local
+
+# تجاهل ملفات IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# تجاهل ملفات النسخ الاحتياطي
+*~
+*.bak
+*.orig
+*.rej
+
+# تجاهل ملفات خاصة باللغات/الأطر (أمثلة)
+# Python
+__pycache__/
+*.pyc
+.Python
+venv/
+
+# Java
+*.class
+.classpath
+.project
+.settings/
+bin/
+target/
+
+# C#
+[Bb]in/
+[Oo]bj/
+
+# Ruby
+.bundle/
+vendor/bundle/
+
+# Dart/Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.vscode/
+build/
+
+

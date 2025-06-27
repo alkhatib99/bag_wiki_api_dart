@@ -11,53 +11,53 @@ class AuthService {
   final PostgreSQLConnection _db;
   final String _jwtSecret;
   final Duration _tokenExpiration;
+  final String? _adminEmail;
+  final String? _adminPassword;
 
   AuthService(this._db, this._jwtSecret, {Duration? tokenExpiration})
-      : _tokenExpiration = tokenExpiration ?? const Duration(hours: 24);
+      : _tokenExpiration = tokenExpiration ?? const Duration(hours: 24),
+        _adminEmail = Platform.environment['ADMIN_EMAIL'],
+        _adminPassword = Platform.environment['ADMIN_PASSWORD'] {
+    // Log warning if admin credentials are missing
+    if (_adminEmail == null || _adminPassword == null) {
+      print('WARNING: ADMIN_EMAIL or ADMIN_PASSWORD not found in environment variables');
+      print('Please ensure .env file contains ADMIN_EMAIL and ADMIN_PASSWORD');
+    }
+  }
 
-  /// Authenticates a user with email and password
+  /// Authenticates a user with email and password using static admin credentials
   Future<Map<String, dynamic>?> authenticate(
       String email, String password) async {
     try {
-      // print
       print('Authenticating user with email: $email');
-      final results = await _db.query(
-        'SELECT id,email, password, role FROM users_sections WHERE email = @email',
-        substitutionValues: {'email': email},
-      );
-      // print results
-      print('Query results: $results');
-
-      if (results.isEmpty) {
-        return null; // User not found
+      
+      // Check if admin credentials are configured
+      if (_adminEmail == null || _adminPassword == null) {
+        print('Admin credentials not configured in environment variables');
+        return null;
       }
 
-      final user = {
-        'id': results[0][0],
-        // 'username': results[0][1],
-        'email': results[0][1],
-        'password': results[0][2],
-        'role': results[0][3],
+      // Validate against static admin credentials
+      if (email != _adminEmail || password != _adminPassword) {
+        print('Invalid admin credentials provided');
+        return null;
+      }
+
+      // Create admin user object
+      final adminUser = {
+        'id': 1, // Static admin ID
+        'email': _adminEmail,
+        'role': 'admin',
       };
 
-      final passwordHash = results[0][2] as String;
-
-      // Verify password
-      final bool isValid = password == passwordHash;
-      // BCrypt.checkpw(password, passwordHash);
-      if (!isValid) {
-        return null; // Invalid password
-      }
-
       // Generate JWT token
-      final token = generateToken(user);
+      final token = generateToken(adminUser);
 
       return {
         'user': {
-          'id': user['id'],
-          // 'username': user['username'],
-          'email': user['email'],
-          'role': user['role'],
+          'id': adminUser['id'],
+          'email': adminUser['email'],
+          'role': adminUser['role'],
         },
         'token': token,
       };
@@ -72,7 +72,6 @@ class AuthService {
     final jwt = JWT(
       {
         'id': user['id'],
-        // 'username': user['username'],ss
         'email': user['email'],
         'role': user['role'],
         'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -97,45 +96,16 @@ class AuthService {
     }
   }
 
-  /// Creates a new user
+  /// Creates a new user - Disabled for static admin setup
+  /// This method is kept for backward compatibility but will not create users
   Future<Map<String, dynamic>?> createUser(
     String username,
     String email,
     String password,
     String role,
   ) async {
-    try {
-      // Hash the password
-      final String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
-
-      final results = await _db.query(
-        '''
-        INSERT INTO users_sections (username, email, "passwordHash", role)
-        VALUES (@username, @email, @passwordHash, @role)
-        RETURNING id, username, email, role, "createdAt"
-        ''',
-        substitutionValues: {
-          'username': username,
-          'email': email,
-          'passwordHash': passwordHash,
-          'role': role,
-        },
-      );
-
-      if (results.isEmpty) {
-        return null;
-      }
-
-      return {
-        'id': results[0][0],
-        'username': results[0][1],
-        'email': results[0][2],
-        'role': results[0][3],
-        'createdAt': results[0][4],
-      };
-    } catch (e) {
-      print('Error creating user: $e');
-      return null;
-    }
+    print('User registration is disabled. Only static admin login is supported.');
+    return null;
   }
 }
+
