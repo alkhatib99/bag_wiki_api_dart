@@ -134,15 +134,12 @@ void main(List<String> args) async {
     print('Fields from environment variables:');
   }
 
-<<<<<<< HEAD
   // Print registered routes for debugging
   print('Registered routes:');
   // router.all('/<ignored|.*>', (Request request) {
   //   return Response.notFound('Not Found');
   // });
 
-=======
->>>>>>> a73bfbcc8e42440a52e5a23e01769364d0a45fec
   print('Root route registered at /');
   print('Auth routes registered at /auth/login');
   print('Auth routes registered at /auth/register');
