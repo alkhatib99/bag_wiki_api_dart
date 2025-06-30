@@ -138,7 +138,7 @@ void main(List<String> args) async {
   }
 
   // Print registered routes for debugging
-  // print('Registered routes:');
+  print('Registered routes:');
   // router.all('/<ignored|.*>', (Request request) {
   //   return Response.notFound('Not Found');
   // });
