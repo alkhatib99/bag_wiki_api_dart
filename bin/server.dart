@@ -10,39 +10,40 @@ import 'package:shelf_router/shelf_router.dart';
 import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:args/args.dart';
+import 'package:postgres/postgres.dart';
 
 // Configure routes
 Future<Router> configureRouter(
-    DatabaseConfig dbConfig, AuthService authService) async {
+    PostgreSQLConnection connection, AuthService authService) async {
   final router = Router();
 
-  // Create database connection synchronously before registering routes
-  final connection = await dbConfig.createConnection();
-
-  // Set up auth routes (unprotected) - SYNCHRONOUSLY
+  // Set up auth routes (unprotected)
   final authController = AuthController(authService);
   router.mount('/auth', authController.router);
 
-  // Set up section routes (protected) - SYNCHRONOUSLY
+  // Set up section controller
   final sectionController = SectionController(connection);
 
-  // Create a pipeline for section routes with authentication and role middleware
-  final sectionPipeline = Pipeline()
-      .addMiddleware(authMiddleware(authService)); // Apply JWT auth first
-  // Role middleware will be applied per-route group if needed, or handled within controller if simpler
+  // Public section routes (no authentication required)
+  router.get('/api/sections', sectionController.getAllSectionsHandler);
+  router.get('/api/sections/<id>', sectionController.getSectionByIdHandler);
 
-  // Mount the section controller's router under /api/sections
-  // Apply the authentication middleware to all routes mounted here
+  // Authenticated section routes (authentication required)
+  final authenticatedSectionRouter = Router();
+  authenticatedSectionRouter.post(
+      '/create', sectionController.createSectionHandler);
+  authenticatedSectionRouter.put(
+      '/<id>/update', sectionController.updateSectionHandler);
+  authenticatedSectionRouter.delete(
+      '/<id>', sectionController.deleteSectionHandler);
+
+  // Apply authentication middleware to the authenticated section routes
   router.mount(
-      '/api/sections', sectionPipeline.addHandler(sectionController.router));
-
-  // --- IMPORTANT: Role-based access needs to be handled correctly ---
-  // Option 1 (Middleware per route group - more complex with shelf_router mount):
-  // You might need a custom mounting solution or apply middleware inside the SectionController router definition.
-
-  // Option 2 (Check roles within SectionController handlers - simpler for now):
-  // Modify SectionController handlers (create, update, delete) to check request context for 'admin' role.
-  // The authMiddleware should add user info (including role) to request.context.
+    '/api/sections',
+    Pipeline()
+        .addMiddleware(authMiddleware(authService))
+        .addHandler(authenticatedSectionRouter),
+  );
 
   // Root route
   router.get('/', (Request request) {
@@ -71,15 +72,20 @@ void main(List<String> args) async {
 
   // Initialize database configuration
   final dbConfig = DatabaseConfig();
-  final isConnected = await dbConfig.testConnection();
+
+  // Create a single, persistent database connection
+  final connection = await dbConfig.createConnection();
+
+  // Test the connection using the persistent connection
+  final isConnected = await dbConfig.testConnection(connection);
 
   if (!isConnected) {
     stderr.writeln('Failed to connect to the database. Exiting...');
+    await connection.close(); // Ensure connection is closed on failure
     exit(1);
   }
 
-  // Create a connection and initialize the database
-  final connection = await dbConfig.createConnection();
+  // Initialize the database schema using the persistent connection
   await dbConfig.initializeDatabase(connection);
 
   // Initialize auth service
@@ -100,12 +106,12 @@ void main(List<String> args) async {
   };
 
   // Configure router with await to ensure all routes are registered
-  final router = await configureRouter(dbConfig, authService);
+  // Pass the persistent connection to configureRouter
+  final router = await configureRouter(connection, authService);
 
   // Configure middleware
   final handler = Pipeline()
       .addMiddleware(logRequests())
-      // Corrected CORS middleware usage
       .addMiddleware(corsHeaders(headers: corsHeadersMap))
       .addHandler(router);
 
@@ -114,22 +120,13 @@ void main(List<String> args) async {
 
   // Print server information
   print('Server started on http://${server.address.host}:${server.port}');
-  // Print server port for debugging
   print('Server listening on port ${server.port}');
-  // print('Database connected: ${dbConfig.isConnected}');
   print('Database connection established successfully.');
-  // Print auth service initialization
   print('Auth service initialized with JWT secret: $jwtSecret');
-  // Print database connection details
-  // print('Database connection details: ${dbConfig.connectionDetails}');
-  // /print('Database connection string: ${dbConfig.connectionString}');
 
-  // Print environment variables for debugging
-  // print('Environment variables:');
   env.load();
   final fields = env['FIELDS']?.split(',') ?? [];
 
-  // Print each field
   print('Fields:');
   if (fields.isEmpty) {
     print('No fields specified in environment variables.');
@@ -137,12 +134,15 @@ void main(List<String> args) async {
     print('Fields from environment variables:');
   }
 
+<<<<<<< HEAD
   // Print registered routes for debugging
   print('Registered routes:');
   // router.all('/<ignored|.*>', (Request request) {
   //   return Response.notFound('Not Found');
   // });
 
+=======
+>>>>>>> a73bfbcc8e42440a52e5a23e01769364d0a45fec
   print('Root route registered at /');
   print('Auth routes registered at /auth/login');
   print('Auth routes registered at /auth/register');
@@ -150,10 +150,15 @@ void main(List<String> args) async {
   print('Section routes registered at /api/sections/<id>');
   print('Section routes registered at /api/sections/<id>/create');
   print('Section routes registered at /api/sections/<id>/update');
-
-  // print('Auth routes registered at /auth');
-  // print(router)
-  // print routes are registered under server
-  // print("")
   print('Section routes registered under /api/sections');
+
+  // Add a shutdown hook to close the database connection gracefully
+  ProcessSignal.sigint.watch().listen((signal) async {
+    print(
+        '\nReceived SIGINT. Shutting down server and closing database connection...');
+    await server.close(force: true);
+    await connection.close();
+    print('Server stopped and database connection closed.');
+    exit(0);
+  });
 }

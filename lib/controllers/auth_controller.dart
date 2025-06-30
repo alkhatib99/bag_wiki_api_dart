@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:bag_wiki_api_dart/auth_service.dart';
+import 'package:dotenv/dotenv.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
@@ -10,8 +11,8 @@ class AuthController {
 
   AuthController(this._authService) {
     _router.post('/login', _login);
-    _router.post('/register', _register);
-    // _router.post('/logout', _logout);
+    // Registration disabled for static admin setup
+    // _router.post('/register', _register);
   }
 
   Future<Response> _login(Request request) async {
@@ -34,8 +35,7 @@ class AuthController {
       if (result == null) {
         return Response.unauthorized(
           json.encode({
-            'error':
-                'Invalid email or password for email : $email \n password: $password'
+            'error': 'Invalid admin credentials'
           }),
           headers: {'Content-Type': 'application/json'},
         );
@@ -53,45 +53,14 @@ class AuthController {
     }
   }
 
+  // Registration method disabled for static admin setup
+  /*
   Future<Response> _register(Request request) async {
-    try {
-      final jsonBody = await request.readAsString();
-      final Map<String, dynamic> data = json.decode(jsonBody);
-
-      if (!data.containsKey('email') || !data.containsKey('password')) {
-        return Response.badRequest(
-          body: json
-              .encode({'error': 'Username, email, and password are required'}),
-          headers: {'Content-Type': 'application/json'},
-        );
-      }
-
-      final username = data['username'] as String;
-      final email = data['email'] as String;
-      final password = data['password'] as String;
-      final role =
-          data['role'] as String? ?? 'viewer'; // Default to viewer role
-
-      final user =
-          await _authService.createUser(username, email, password, role);
-
-      if (user == null) {
-        return Response.internalServerError(
-          body: json.encode({'error': 'Failed to create user'}),
-          headers: {'Content-Type': 'application/json'},
-        );
-      }
-
-      return Response(
-        201,
-        body: json.encode({'user': user}),
-        headers: {'Content-Type': 'application/json'},
-      );
-    } catch (e) {
-      return Response.internalServerError(
-        body: json.encode({'error': 'Registration failed: $e'}),
-        headers: {'Content-Type': 'application/json'},
-      );
-    }
+    return Response.badRequest(
+      body: json.encode({'error': 'User registration is disabled. Only admin login is supported.'}),
+      headers: {'Content-Type': 'application/json'},
+    );
   }
+  */
 }
+

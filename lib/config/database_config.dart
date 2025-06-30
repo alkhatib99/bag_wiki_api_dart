@@ -50,7 +50,7 @@ class DatabaseConfig {
   }
 
   /// Test the database connection
-  Future<bool> testConnection() async {
+  Future<bool> testConnection([PostgreSQLConnection? connection]) async {
     PostgreSQLConnection? connection;
 
     try {
